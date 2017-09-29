@@ -82,12 +82,10 @@ class i18n {
      * @var array
      */
     protected $userLangs = array();
-
     protected $appliedLang = NULL;
     protected $langFilePath = NULL;
     protected $cacheFilePath = NULL;
     protected $isInitialized = false;
-
 
     /**
      * Constructor
@@ -144,32 +142,31 @@ class i18n {
 
         // whether we need to create a new cache file
         $outdated = !file_exists($this->cacheFilePath) ||
-            filemtime($this->cacheFilePath) < filemtime($this->langFilePath) || // the language config was updated
-            ($this->mergeFallback && filemtime($this->cacheFilePath) < filemtime($this->getConfigFilename($this->fallbackLang))); // the fallback language config was updated
-
+                filemtime($this->cacheFilePath) < filemtime($this->langFilePath) || // the language config was updated
+                ($this->mergeFallback && filemtime($this->cacheFilePath) < filemtime($this->getConfigFilename($this->fallbackLang))); // the fallback language config was updated
+        //  $outdated = true;
         if ($outdated) {
             $config = $this->load($this->langFilePath);
             if ($this->mergeFallback)
                 $config = self::array_extend($config, $this->load($this->getConfigFilename($this->fallbackLang)));
 
             $compiled = "<?php class " . $this->prefix . " {\n"
-            	. $this->compile($config)
-            	. 'public static function __callStatic($string, $args) {' . "\n"
-            	. '    return vsprintf(constant("self::" . $string), $args);'
-            	. "\n}\n}\n"
-            	. "function ".$this->prefix .'($string, $args=NULL) {'."\n"
-            	. '    $return = constant("'.$this->prefix.'::".$string);'."\n"
-            	. '    return $args ? vsprintf($return,$args) : $return;'
-            	. "\n}";
+                    . $this->compile($config)
+                    . 'public static function __callStatic($string, $args) {' . "\n"
+                    . '    return vsprintf(constant("self::" . $string), $args);'
+                    . "\n}\n}\n"
+                    . "function " . $this->prefix . '($string, $args=NULL) {' . "\n"
+                    . '    $return = ' . $this->prefix . '::messages[$string];' . "\n"
+                    . '    return $args ? vsprintf($return,$args) : $return;'
+                    . "\n}";
 
-			if( ! is_dir($this->cachePath))
-				mkdir($this->cachePath, 0755, true);
+            if (!is_dir($this->cachePath))
+                mkdir($this->cachePath, 0755, true);
 
             if (file_put_contents($this->cacheFilePath, $compiled) === FALSE) {
                 throw new Exception("Could not write cache file to path '" . $this->cacheFilePath . "'. Is it writable?");
             }
             chmod($this->cacheFilePath, 0755);
-
         }
 
         require_once $this->cacheFilePath;
@@ -290,10 +287,10 @@ class i18n {
         switch ($ext) {
             case 'properties':
             case 'ini':
-                $config = parse_ini_file($filename, true);
+                $config = parse_ini_file($filename, true, INI_SCANNER_RAW);
                 break;
             case 'yml':
-                if( ! class_exists('Spyc') )
+                if (!class_exists('Spyc'))
                     require_once 'vendor/spyc.php';
                 $config = spyc_load_file($filename);
                 break;
@@ -310,14 +307,16 @@ class i18n {
      * Recursively compile an associative array to PHP code.
      */
     protected function compile($config, $prefix = '') {
-        $code = '';
+        $code = 'const messages =array(';
         foreach ($config as $key => $value) {
             if (is_array($value)) {
-                $code .= $this->compile($value, $prefix . $key . $this->sectionSeperator);
+                $code = $code . $this->compile($value, $prefix . $key . $this->sectionSeperator);
             } else {
-                $code .= 'const ' . $prefix . $key . ' = \'' . str_replace('\'', '\\\'', $value) . "';\n";
+                //$code .= 'const ' . $prefix . $key . ' = \'' . str_replace('\'', '\\\'', $value) . "';\n";
+                $code = $code . '"' . $key . '"=>"' . str_replace('\'', '\\\'', $value) . '",';
             }
         }
+        $code .= ");\n";
         return $code;
     }
 
@@ -332,9 +331,9 @@ class i18n {
         foreach ($b as $key => $value) {
             if (!array_key_exists($key, $a)) {
                 $a[$key] = $value;
-	        }
+            }
         }
-	   return $a;
+        return $a;
     }
 
 }
