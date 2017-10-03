@@ -153,12 +153,18 @@ class i18n {
             $compiled = "<?php class " . $this->prefix . " {\n"
                     . $this->compile($config)
                     . 'public static function __callStatic($string, $args) {' . "\n"
-                    . '    return vsprintf(constant("self::" . $string), $args);'
+                    . '    return replaceplaceholder(constant(self::messages[$string]), $args);'
                     . "\n}\n}\n"
                     . "function " . $this->prefix . '($string, $args=NULL) {' . "\n"
                     . '    $return = ' . $this->prefix . '::messages[$string];' . "\n"
-                    . '    return $args ? vsprintf($return,$args) : $return;'
-                    . "\n}";
+                    . '    return $args ? replaceplaceholder($return,$args) : $return;'
+                    . '}' . "\n"
+                    . 'function replaceplaceholder($string, $args) {' . "\n"
+                    . '     for ($index = 0; $index < count($args); $index++) {' . "\n"
+                    . '      $string = str_replace("{".$index."}", $args[$index], $string);' . "\n"
+                    . '     }' . "\n"
+                    . 'return $string;' . "\n"
+                    . '}' . "\n";
 
             if (!is_dir($this->cachePath))
                 mkdir($this->cachePath, 0755, true);
@@ -286,6 +292,17 @@ class i18n {
         $ext = substr(strrchr($filename, '.'), 1);
         switch ($ext) {
             case 'properties':
+                $linesArray = file($filename);    // $linesArray is an array   
+                $config = array();
+                foreach ($linesArray AS $line) {
+                    if (false !== ($pos = strpos($line, '='))) {
+                        $lineContArray = explode("=", $line);
+                        $key = $lineContArray[0];
+                        //$value = ;
+                        $config[$key] = str_replace("\r\n", '', $lineContArray[1]);
+                    }
+                }
+                break;
             case 'ini':
                 $config = parse_ini_file($filename, true, INI_SCANNER_RAW);
                 break;
@@ -313,7 +330,7 @@ class i18n {
                 $code = $code . $this->compile($value, $prefix . $key . $this->sectionSeperator);
             } else {
                 //$code .= 'const ' . $prefix . $key . ' = \'' . str_replace('\'', '\\\'', $value) . "';\n";
-                $code = $code . '"' . $key . '"=>"' . str_replace('\'', '\\\'', $value) . '",';
+                $code .= '"' . trim($key) . '"=>"' . trim($value) . '",';
             }
         }
         $code .= ");\n";
