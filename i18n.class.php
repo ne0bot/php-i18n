@@ -2,9 +2,11 @@
 
 /*
  * Fork this project on GitHub!
- * https://github.com/Philipp15b/php-i18n
+ * https://github.com/ne0bot/php-i18n
  *
  * License: MIT
+ * Modified by Ne0bot
+ * 
  */
 
 class i18n {
