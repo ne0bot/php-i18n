@@ -6,7 +6,7 @@
  *
  * License: MIT
  * Modified by Ne0bot
- * 
+ * Changelog: added support to properties files with dot's
  */
 
 class i18n {
