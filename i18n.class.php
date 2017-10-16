@@ -162,9 +162,13 @@ class i18n {
                     . '    return $args ? replaceplaceholder($return,$args) : $return;'
                     . '}' . "\n"
                     . 'function replaceplaceholder($string, $args) {' . "\n"
+                    . 'if (is_array($args)) {' . "\n"
                     . '     for ($index = 0; $index < count($args); $index++) {' . "\n"
                     . '      $string = str_replace("{".$index."}", $args[$index], $string);' . "\n"
                     . '     }' . "\n"
+                    . '} else {' . "\n"
+                    . '  $string = str_replace("{0}", $args, $string);' . "\n"
+                    . '  }' . "\n"
                     . 'return $string;' . "\n"
                     . '}' . "\n";
 
