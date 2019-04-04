@@ -161,6 +161,9 @@ class i18n {
                     . 'include "./i18n/enadmin.php";'
                     . ' if (array_key_exists($string, ' . $this->prefix . '::messages)){$return = ' . $this->prefix . '::messages[$string];}else{'
                     . '$return = $string;'
+                    . '$fp = fopen("loststrings.txt", "w");'
+                    . 'fwrite($fp,$string."=".PHP_EOL);'
+                    . 'fclose($fp);'
                     . '}'
                     . '    return $args ? replaceplaceholder($return,$args) : $return;'
                     . '}' . "\n"
