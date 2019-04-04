@@ -158,7 +158,10 @@ class i18n {
                     . '    return replaceplaceholder(constant(self::messages[$string]), $args);'
                     . "\n}\n}\n"
                     . "function " . $this->prefix . '($string, $args=NULL) {' . "\n"
-                    . '    $return = ' . $this->prefix . '::messages[$string];' . "\n"
+                    . 'include "./i18n/enadmin.php";'
+                    . ' if (array_key_exists($string, ' . $this->prefix . '::messages)){$return = ' . $this->prefix . '::messages[$string];}else{'
+                    . '$return = $string;'
+                    . '}'
                     . '    return $args ? replaceplaceholder($return,$args) : $return;'
                     . '}' . "\n"
                     . 'function replaceplaceholder($string, $args) {' . "\n"
